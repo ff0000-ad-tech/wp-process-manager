@@ -17,6 +17,28 @@ function prepare(_options) {
 		},
 		_options
 	)
+	prepareInterrupt()
+}
+
+// prepare interrupt
+function prepareInterrupt() {
+	const cleanup = () => {
+		stopWatching(() => {
+			log('Goodbye~')
+			process.exit()
+		})
+	}
+	process.stdin.resume() //so the program will not close instantly
+	process.on('SIGINT', cleanup)
+	process.on('SIGUSR1', cleanup)
+	process.on('SIGUSR2', cleanup)
+	process.on('exit', code => {
+		log(`Exit code: ${code}`)
+	})
+	process.on('uncaughtException', err => {
+		log(err)
+		cleanup()
+	})
 }
 
 // start watching
@@ -28,7 +50,20 @@ function startWatching() {
 			if (err) {
 				return log(err)
 			}
-			log(res.headers)
+		})
+	}
+}
+
+// stop watching
+function stopWatching(cb) {
+	if (options.stop) {
+		log('Requesting Creative-Server to stop watching')
+		log(options.stop)
+		request(options.stop, (err, res, body) => {
+			if (err) {
+				return log(err)
+			}
+			cb()
 		})
 	}
 }
