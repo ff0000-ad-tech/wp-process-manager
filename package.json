@@ -1,0 +1,20 @@
+{
+	"author": {
+		"name": "RED Interactive Agency"
+	},
+	"dependencies": {},
+	"deprecated": false,
+	"description": "Webpack - Process Manager ===============",
+	"homepage": "https://github.com/ff0000-ad-tech/wp-process-manager#readme",
+	"license": "ISC",
+	"main": "index.js",
+	"name": "wp-process-manager",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ff0000-ad-tech/wp-process-manager.git"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"version": "1.0.0"
+}
