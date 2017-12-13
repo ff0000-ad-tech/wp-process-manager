@@ -1,22 +1,39 @@
-const Deploy = require('./lib/deploy/deploy.js')
-const Ad = require('./lib/ad/ad.js')
-const Payload = require('./lib/payload/payload.js')
+const request = require('request')
 
 const debug = require('debug')
-var log = debug('DM')
+var log = debug('PM')
 
-// deploy
-var deploy = Deploy
+// options
+let options = {}
 
-// ad
-var ad = Ad
-ad.init(deploy)
+// prepare
+function prepare(_options) {
+	options = Object.assign(
+		{
+			// api call to start watching
+			start: null,
+			// api call to stop watching
+			stop: null
+		},
+		_options
+	)
+}
 
-// payload
-var payload = Payload
+// start watching
+function startWatching() {
+	if (options.start) {
+		log('Requesting Creative-Server to watch')
+		log(options.start)
+		request(options.start, (err, res, body) => {
+			if (err) {
+				return log(err)
+			}
+			log(res.headers)
+		})
+	}
+}
 
 module.exports = {
-	deploy,
-	ad,
-	payload
+	prepare,
+	startWatching
 }
