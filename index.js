@@ -73,8 +73,24 @@ function stopWatching(cb) {
 	}
 }
 
+// complete watching
+function completeWatch() {
+	if (options.complete) {
+		log('Inform Creative-Server process is complete')
+		log(options.complete)
+		request(options.complete, (err, res, body) => {
+			if (err) {
+				log('unable to connect to Creative-Server')
+				// return log(err)
+			}
+			stopWatching()
+		})
+	}
+}
+
 module.exports = {
 	prepare,
 	startWatching,
-	stopWatching
+	stopWatching,
+	completeWatch
 }
