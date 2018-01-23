@@ -17,7 +17,6 @@ function prepare(_options) {
 		},
 		_options
 	)
-	prepareInterrupt()
 }
 
 // prepare interrupt
@@ -28,7 +27,7 @@ function prepareInterrupt() {
 			process.exit()
 		})
 	}
-	process.stdin.resume() //so the program will not close instantly
+	process.stdin.resume() // so the program will not terminate instantly
 	process.on('SIGINT', cleanup)
 	process.on('SIGUSR1', cleanup)
 	process.on('SIGUSR2', cleanup)
@@ -46,9 +45,11 @@ function startWatching() {
 	if (options.start) {
 		log('Requesting Creative-Server to watch')
 		log(options.start)
+		prepareInterrupt()
 		request(options.start, (err, res, body) => {
 			if (err) {
-				return log(err)
+				log('unable to connect to Creative-Server')
+				// return log(err)
 			}
 		})
 	}
@@ -60,15 +61,20 @@ function stopWatching(cb) {
 		log('Requesting Creative-Server to stop watching')
 		log(options.stop)
 		request(options.stop, (err, res, body) => {
+			process.stdin.destroy() // release the process to terminate on its own
 			if (err) {
-				return log(err)
+				log('unable to connect to Creative-Server')
+				// return log(err)
 			}
-			cb()
+			if (cb) {
+				cb()
+			}
 		})
 	}
 }
 
 module.exports = {
 	prepare,
-	startWatching
+	startWatching,
+	stopWatching
 }
