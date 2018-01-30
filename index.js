@@ -17,7 +17,6 @@ function prepare(_options) {
 		},
 		_options
 	)
-	prepareInterrupt()
 }
 
 // prepare interrupt
@@ -28,10 +27,12 @@ function prepareInterrupt() {
 			process.exit()
 		})
 	}
-	process.stdin.resume() //so the program will not close instantly
+	process.stdin.resume() // so the program will not terminate instantly
 	process.on('SIGINT', cleanup)
 	process.on('SIGUSR1', cleanup)
 	process.on('SIGUSR2', cleanup)
+	process.on('SIGTERM', cleanup)
+	// process.on('SIGKILL', cleanup)
 	process.on('exit', code => {
 		log(`Exit code: ${code}`)
 	})
@@ -46,9 +47,11 @@ function startWatching() {
 	if (options.start) {
 		log('Requesting Creative-Server to watch')
 		log(options.start)
-		request(options.start, (err, res, body) => {
+		prepareInterrupt()
+		request(`${options.start}/${process.pid}`, (err, res, body) => {
 			if (err) {
-				return log(err)
+				log('unable to connect to Creative-Server')
+				// return log(err)
 			}
 		})
 	}
@@ -59,16 +62,37 @@ function stopWatching(cb) {
 	if (options.stop) {
 		log('Requesting Creative-Server to stop watching')
 		log(options.stop)
-		request(options.stop, (err, res, body) => {
+		request(`${options.stop}/${process.pid}`, (err, res, body) => {
+			process.stdin.destroy() // release the process to terminate on its own
 			if (err) {
-				return log(err)
+				log('unable to connect to Creative-Server')
+				// return log(err)
 			}
-			cb()
+			if (cb) {
+				cb()
+			}
+		})
+	}
+}
+
+// complete watching
+function completeWatch() {
+	if (options.complete) {
+		log('Inform Creative-Server process is complete')
+		log(options.complete)
+		request(options.complete, (err, res, body) => {
+			if (err) {
+				log('unable to connect to Creative-Server')
+				// return log(err)
+			}
+			stopWatching()
 		})
 	}
 }
 
 module.exports = {
 	prepare,
-	startWatching
+	startWatching,
+	stopWatching,
+	completeWatch
 }
