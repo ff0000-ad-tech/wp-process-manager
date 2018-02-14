@@ -10,13 +10,44 @@ let options = {}
 function prepare(_options) {
 	options = Object.assign(
 		{
-			// api call to start watching
-			start: null,
-			// api call to stop watching
-			stop: null
+			api: null, // path to creative-server api
+			key: null, // `/${ctype}/${size}/${index}`,
+			watch: {
+				start: null, // `/watch-start`,
+				stop: null, // `/watch-stop`,
+				complete: null // `/watch-complete`,
+			},
+			processing: {
+				start: null, // `/processing-start`,
+				stop: null // `/processing-stop`
+			},
+			error: null // `/error`
 		},
 		_options
 	)
+}
+
+function getCmd(name) {
+	try {
+		switch (name) {
+			case 'watch-start':
+				return options.api + options.watch.start + options.key
+			case 'watch-stop':
+				return options.api + options.watch.stop + options.key
+			case 'watch-complete':
+				return options.api + options.watch.complete + options.key
+			case 'processing-start':
+				return options.api + options.processing.start + options.key
+			case 'processing-stop':
+				return options.api + options.processing.stop + options.key
+			case 'error-dispatch':
+				return options.api + options.error.dispatch + options.key
+			case 'error-reset':
+				return options.api + options.error.reset + options.key
+		}
+	} catch (err) {
+		return
+	}
 }
 
 // prepare interrupt
@@ -44,11 +75,12 @@ function prepareInterrupt() {
 
 // start watching
 function startWatching() {
-	if (options.start) {
+	const cmd = getCmd('watch-start')
+	if (cmd) {
 		log('Requesting Creative-Server to watch')
-		log(options.start)
+		log(cmd)
 		prepareInterrupt()
-		request(`${options.start}/${process.pid}`, (err, res, body) => {
+		request(`${cmd}/${process.pid}`, (err, res, body) => {
 			if (err) {
 				log('unable to connect to Creative-Server')
 				// return log(err)
@@ -59,10 +91,11 @@ function startWatching() {
 
 // stop watching
 function stopWatching(cb) {
-	if (options.stop) {
+	const cmd = getCmd('watch-stop')
+	if (cmd) {
 		log('Requesting Creative-Server to stop watching')
-		log(options.stop)
-		request(`${options.stop}/${process.pid}`, (err, res, body) => {
+		log(cmd)
+		request(`${cmd}/${process.pid}`, (err, res, body) => {
 			process.stdin.destroy() // release the process to terminate on its own
 			if (err) {
 				log('unable to connect to Creative-Server')
@@ -77,10 +110,11 @@ function stopWatching(cb) {
 
 // complete watching
 function completeWatch() {
-	if (options.complete) {
+	const cmd = getCmd('watch-complete')
+	if (cmd) {
 		log('Inform Creative-Server process is complete')
-		log(options.complete)
-		request(options.complete, (err, res, body) => {
+		log(cmd)
+		request(cmd, (err, res, body) => {
 			if (err) {
 				log('unable to connect to Creative-Server')
 				// return log(err)
@@ -90,9 +124,41 @@ function completeWatch() {
 	}
 }
 
+// processing
+function setProcessing(toggle) {
+	let cmd = getCmd('processing-start')
+	if (!toggle) {
+		cmd = getCmd('processing-stop')
+	}
+	if (cmd) {
+		request(`${cmd}`, (err, res, body) => {
+			if (err) {
+				// return log(err)
+			}
+		})
+	}
+}
+
+// erroring
+function setError(toggle) {
+	let cmd = getCmd('error-dispatch')
+	if (!toggle) {
+		cmd = getCmd('error-reset')
+	}
+	if (cmd) {
+		request(`${cmd}`, (err, res, body) => {
+			if (err) {
+				// return log(err)
+			}
+		})
+	}
+}
+
 module.exports = {
 	prepare,
 	startWatching,
 	stopWatching,
-	completeWatch
+	completeWatch,
+	setProcessing,
+	setError
 }
