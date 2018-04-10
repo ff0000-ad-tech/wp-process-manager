@@ -1,6 +1,6 @@
 const request = require('request')
 
-const debug = require('debug')
+const debug = require('@ff0000-ad-tech/debug')
 var log = debug('PM')
 
 // options
