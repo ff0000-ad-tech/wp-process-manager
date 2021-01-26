@@ -1,4 +1,4 @@
-const request = require('request')
+const axios = require('axios')
 
 const debug = require('@ff0000-ad-tech/debug')
 var log = debug('PM')
@@ -7,7 +7,7 @@ var log = debug('PM')
 let options = {}
 
 // prepare
-function prepare(_options) {
+const prepare = (_options) => {
 	options = Object.assign(
 		{
 			api: null, // path to creative-server api
@@ -27,7 +27,7 @@ function prepare(_options) {
 	)
 }
 
-function getCmd(name) {
+const getCmd = (name) => {
 	try {
 		switch (name) {
 			case 'watch-start':
@@ -51,7 +51,7 @@ function getCmd(name) {
 }
 
 // prepare interrupt
-function prepareInterrupt() {
+const prepareInterrupt = () => {
 	const cleanup = () => {
 		stopWatching(() => {
 			log('Goodbye~')
@@ -74,83 +74,81 @@ function prepareInterrupt() {
 }
 
 // start watching
-function startWatching() {
+const startWatching = async () => {
 	const cmd = getCmd('watch-start')
 	if (cmd) {
 		log('Requesting Creative-Server to watch')
 		log(cmd)
 		prepareInterrupt()
-		request(`${cmd}/${process.pid}`, (err, res, body) => {
-			if (err) {
-				log('unable to connect to Creative-Server')
-				// return log(err)
-			}
-		})
+		try {
+			await axios.get(`${cmd}/${process.pid}`)
+		} catch (err) {
+			log('unable to connect to Creative-Server')
+		}
 	}
 }
 
 // stop watching
-function stopWatching(cb) {
+const stopWatching = async (cb) => {
 	const cmd = getCmd('watch-stop')
 	if (cmd) {
 		log('Requesting Creative-Server to stop watching')
 		log(cmd)
-		request(`${cmd}/${process.pid}`, (err, res, body) => {
+		try {
+			await axios.get(`${cmd}/${process.pid}`)
 			process.stdin.destroy() // release the process to terminate on its own
-			if (err) {
-				log('unable to connect to Creative-Server')
-				// return log(err)
-			}
 			if (cb) {
 				cb()
 			}
-		})
+		} catch (err) {
+			log('unable to connect to Creative-Server')
+			// return log(err)
+		}
 	}
 }
 
 // complete watching
-function completeWatch() {
+const completeWatch = async () => {
 	const cmd = getCmd('watch-complete')
 	if (cmd) {
 		log('Inform Creative-Server process is complete')
 		log(cmd)
-		request(cmd, (err, res, body) => {
-			if (err) {
-				log('unable to connect to Creative-Server')
-				// return log(err)
-			}
+		try {
+			await axios.get(cmd)
 			stopWatching()
-		})
+		} catch (err) {
+			log('unable to connect to Creative-Server')
+		}
 	}
 }
 
 // processing
-function setProcessing(toggle) {
+const setProcessing = async (toggle) => {
 	let cmd = getCmd('processing-start')
 	if (!toggle) {
 		cmd = getCmd('processing-stop')
 	}
 	if (cmd) {
-		request(`${cmd}`, (err, res, body) => {
-			if (err) {
-				// return log(err)
-			}
-		})
+		try {
+			await axios.get(`${cmd}`)
+		} catch (err) {
+			// return log(err)
+		}
 	}
 }
 
 // erroring
-function setError(toggle) {
+const setError = async (toggle) => {
 	let cmd = getCmd('error-dispatch')
 	if (!toggle) {
 		cmd = getCmd('error-reset')
 	}
 	if (cmd) {
-		request(`${cmd}`, (err, res, body) => {
-			if (err) {
-				// return log(err)
-			}
-		})
+		try {
+			await axios.get(`${cmd}`)
+		} catch (err) {
+			// return log(err)
+		}
 	}
 }
 

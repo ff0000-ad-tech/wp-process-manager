@@ -1,36 +1,33 @@
 {
-	"name": "@ff0000-ad-tech/wp-process-manager",
-	"publishConfig": {
-		"access": "public"
-	},
-	"version": "1.0.4",
-	"description": "Webpack - Process Manager",
-	"main": "index.js",
-	"scripts": {
-		"pub": "np"
-	},
-	"engines": {
-		"node": ">=9.8.0",
-		"npm": ">=6.0.0"
-	},
-	"repository": "https://greg.connell@stash.ff0000.com/scm/at/ad-es6.git",
-	"author": "RED Interactive Agency",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/ff0000-ad-tech/wp-process-manager.git"
-	},
-	"author": "RED Interactive Agency",
-	"license": "MIT",
-	"dependencies": {
-		"@ff0000-ad-tech/debug": "latest",
-		"request": "^2.83.0"
-	},
-	"devDependencies": {
-		"eslint": "^4.16.0",
-		"eslint-config-prettier": "^2.9.0",
-		"eslint-plugin-prettier": "^2.5.0",
-		"np": "^2.19.0",
-		"prettier": "^1.10.2"
-	}
+  "name": "@ff0000-ad-tech/wp-process-manager",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.4",
+  "description": "Webpack - Process Manager",
+  "main": "index.js",
+  "scripts": {
+    "pub": "np"
+  },
+  "engines": {
+    "node": ">=9.8.0",
+    "npm": ">=6.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ff0000-ad-tech/wp-process-manager.git"
+  },
+  "author": "RED Interactive Agency",
+  "license": "MIT",
+  "dependencies": {
+    "@ff0000-ad-tech/debug": "latest",
+    "axios": "^0.21.1"
+  },
+  "devDependencies": {
+    "eslint": "^4.16.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-prettier": "^2.5.0",
+    "np": "^2.19.0",
+    "prettier": "^2.2.1"
+  }
 }
