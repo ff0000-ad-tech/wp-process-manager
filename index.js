@@ -52,11 +52,12 @@ const getCmd = (name) => {
 
 // prepare interrupt
 const prepareInterrupt = () => {
-	const cleanup = () => {
-		stopWatching(() => {
+	const cleanup = async () => {
+		const processExit = () => {
 			log('Goodbye~')
 			process.exit()
-		})
+		}
+		await stopWatching(processExit, processExit)
 	}
 	process.stdin.resume() // so the program will not terminate instantly
 	process.on('SIGINT', cleanup)
@@ -89,7 +90,7 @@ const startWatching = async () => {
 }
 
 // stop watching
-const stopWatching = async (cb) => {
+const stopWatching = async (cb, errCb) => {
 	const cmd = getCmd('watch-stop')
 	if (cmd) {
 		log('Requesting Creative-Server to stop watching')
@@ -103,6 +104,9 @@ const stopWatching = async (cb) => {
 		} catch (err) {
 			log('unable to connect to Creative-Server')
 			// return log(err)
+			if (errCb) {
+				errCb()
+			}
 		}
 	}
 }
