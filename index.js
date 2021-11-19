@@ -65,27 +65,34 @@ const prepareInterrupt = () => {
 	process.on('SIGUSR2', cleanup)
 	process.on('SIGTERM', cleanup)
 	// process.on('SIGKILL', cleanup)
-	process.on('exit', code => {
+	process.on('exit', (code) => {
 		log(`Exit code: ${code}`)
 	})
-	process.on('uncaughtException', err => {
+	process.on('uncaughtException', (err) => {
 		log(err)
 		cleanup()
 	})
+}
+
+// comm
+const executeReq = async (req, cb, errCb) => {
+	log(req)
+	try {
+		await axios({ url: req, method: 'get', timeout: 1000 })
+		cb && cb()
+	} catch (err) {
+		log(`Unable to connect to Creative-Server: ${err.message}`)
+		errCb && errCb()
+	}
 }
 
 // start watching
 const startWatching = async () => {
 	const cmd = getCmd('watch-start')
 	if (cmd) {
-		log('Requesting Creative-Server to watch')
-		log(cmd)
 		prepareInterrupt()
-		try {
-			await axios.get(`${cmd}/${process.pid}`)
-		} catch (err) {
-			log('unable to connect to Creative-Server')
-		}
+		log('Requesting Creative-Server to watch')
+		await executeReq(`${cmd}/${process.pid}`)
 	}
 }
 
@@ -94,20 +101,14 @@ const stopWatching = async (cb, errCb) => {
 	const cmd = getCmd('watch-stop')
 	if (cmd) {
 		log('Requesting Creative-Server to stop watching')
-		log(cmd)
-		try {
-			await axios.get(`${cmd}/${process.pid}`)
-			process.stdin.destroy() // release the process to terminate on its own
-			if (cb) {
-				cb()
-			}
-		} catch (err) {
-			log('unable to connect to Creative-Server')
-			// return log(err)
-			if (errCb) {
-				errCb()
-			}
-		}
+		await executeReq(
+			`${cmd}/${process.pid}`,
+			() => {
+				process.stdin.destroy() // release the process to terminate on its own
+				cb && cb()
+			},
+			errCb
+		)
 	}
 }
 
@@ -116,13 +117,7 @@ const completeWatch = async () => {
 	const cmd = getCmd('watch-complete')
 	if (cmd) {
 		log('Inform Creative-Server process is complete')
-		log(cmd)
-		try {
-			await axios.get(cmd)
-			stopWatching()
-		} catch (err) {
-			log('unable to connect to Creative-Server')
-		}
+		await executeReq(cmd)
 	}
 }
 
@@ -133,11 +128,7 @@ const setProcessing = async (toggle) => {
 		cmd = getCmd('processing-stop')
 	}
 	if (cmd) {
-		try {
-			await axios.get(`${cmd}`)
-		} catch (err) {
-			// return log(err)
-		}
+		await executeReq(cmd)
 	}
 }
 
@@ -148,11 +139,7 @@ const setError = async (toggle) => {
 		cmd = getCmd('error-reset')
 	}
 	if (cmd) {
-		try {
-			await axios.get(`${cmd}`)
-		} catch (err) {
-			// return log(err)
-		}
+		await executeReq(cmd)
 	}
 }
 
