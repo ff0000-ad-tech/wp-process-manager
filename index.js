@@ -89,7 +89,7 @@ const executeReq = async (req, { desc, cb, errCb } = {}) => {
 	desc && log(desc)
 	log(req)
 	try {
-		await axios({ url: req, method: 'get', timeout: 200 })
+		await axios({ url: req, method: 'get', timeout: 2000 })
 		cb && cb()
 	} catch (err) {
 		log(`Unable to connect to Creative-Server: ${err.message}`)
