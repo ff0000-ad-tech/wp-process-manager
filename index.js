@@ -6,6 +6,9 @@ var log = debug('PM')
 // options
 let options = {}
 
+// if creative server is not reachable
+let csAvailable = true
+
 // prepare
 const prepare = (_options) => {
 	options = Object.assign(
@@ -30,6 +33,8 @@ const prepare = (_options) => {
 const getCmd = (name) => {
 	try {
 		switch (name) {
+			case 'api':
+				return options.api
 			case 'watch-start':
 				return options.api + options.watch.start + options.key
 			case 'watch-stop':
@@ -75,13 +80,20 @@ const prepareInterrupt = () => {
 }
 
 // comm
-const executeReq = async (req, cb, errCb) => {
+const executeReq = async (req, { desc, cb, errCb } = {}) => {
+	// give up making reqs to creative-server if previously unreachable
+	if (!csAvailable) {
+		errCb && errCb()
+		return
+	}
+	desc && log(desc)
 	log(req)
 	try {
-		await axios({ url: req, method: 'get', timeout: 1000 })
+		await axios({ url: req, method: 'get', timeout: 200 })
 		cb && cb()
 	} catch (err) {
 		log(`Unable to connect to Creative-Server: ${err.message}`)
+		csAvailable = false
 		errCb && errCb()
 	}
 }
@@ -91,8 +103,7 @@ const startWatching = async () => {
 	const cmd = getCmd('watch-start')
 	if (cmd) {
 		prepareInterrupt()
-		log('Requesting Creative-Server to watch')
-		await executeReq(`${cmd}/${process.pid}`)
+		await executeReq(`${cmd}/${process.pid}`, { desc: 'Requesting Creative-Server to watch' })
 	}
 }
 
@@ -100,15 +111,14 @@ const startWatching = async () => {
 const stopWatching = async (cb, errCb) => {
 	const cmd = getCmd('watch-stop')
 	if (cmd) {
-		log('Requesting Creative-Server to stop watching')
-		await executeReq(
-			`${cmd}/${process.pid}`,
-			() => {
+		await executeReq(`${cmd}/${process.pid}`, {
+			desc: 'Requesting Creative-Server to stop watching',
+			cb: () => {
 				process.stdin.destroy() // release the process to terminate on its own
 				cb && cb()
 			},
 			errCb
-		)
+		})
 	}
 }
 
@@ -116,8 +126,7 @@ const stopWatching = async (cb, errCb) => {
 const completeWatch = async () => {
 	const cmd = getCmd('watch-complete')
 	if (cmd) {
-		log('Inform Creative-Server process is complete')
-		await executeReq(cmd)
+		await executeReq(cmd, { desc: 'Inform Creative-Server process is complete' })
 	}
 }
 
