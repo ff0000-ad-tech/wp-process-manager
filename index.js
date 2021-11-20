@@ -64,7 +64,6 @@ const prepareInterrupt = () => {
 		}
 		await stopWatching(processExit, processExit)
 	}
-	process.stdin.resume() // so the program will not terminate instantly
 	process.on('SIGINT', cleanup)
 	process.on('SIGUSR1', cleanup)
 	process.on('SIGUSR2', cleanup)
